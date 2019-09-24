@@ -12,15 +12,11 @@ namespace Bot_Attendance_Payroll.Dialogs
     {
         public async Task StartAsync(IDialogContext context)
         {
-            await context.PostAsync("Do you want see decalaration under 80/d");
-            context.Wait(this.Declaration_under_80D);
-        }
-
-        private async Task Declaration_under_80D(IDialogContext context, IAwaitable<object> result)
-        {
-            var message = await result;
-            await context.PostAsync("Your declaration under 80/D is..");
+            await context.PostAsync("35000 rs");
             context.Done(true);
         }
+
+
+
     }
 }

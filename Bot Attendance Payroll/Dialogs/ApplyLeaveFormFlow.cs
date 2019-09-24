@@ -7,14 +7,13 @@ namespace Bot_Attendance_Payroll.Dialogs
     [Serializable]
     public class ApplyLeaveFormFlow
     {
-
-        public LeaveTypes leaveTypes;
-
-            
-       
-            public static IForm<ApplyLeaveFormFlow> ApplyLeaveForm()
+           public LeaveTypes leaveTypes;
+           public HalfDayFullDay halfDayorfullDay;
+        public static IForm<ApplyLeaveFormFlow> ApplyLeaveForm()
             {
                 return new FormBuilder<ApplyLeaveFormFlow>()
+                    .Message("Please select select appropriate option from here..")
+                    .Field(nameof(halfDayorfullDay))
                     .Message("Please select your leave category from here..")
                     .Field(nameof(leaveTypes))
                     .Build();
@@ -23,11 +22,7 @@ namespace Bot_Attendance_Payroll.Dialogs
             }
 
 
-        
-
-
         [Serializable]
-
         public enum LeaveTypes
         {
            Apply_for_Sick_Leave_sl = 1,
@@ -38,7 +33,12 @@ namespace Bot_Attendance_Payroll.Dialogs
            Apply_for_Study_Leave_STL=6
 
             }
-        
+        public enum HalfDayFullDay
+        {
+            Apply_for_HalfDay = 1,
+            Apply_for_FullDay = 2
+        }
+
 
     }
 }

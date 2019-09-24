@@ -3,536 +3,514 @@ using Microsoft.Bot.Builder.FormFlow;
 using Microsoft.Bot.Builder.Luis;
 using Microsoft.Bot.Builder.Luis.Models;
 using System;
-using Microsoft.Bot.Builder.Dialogs.Internals;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
 using Microsoft.Bot.Connector;
-using System.Web.Http;
 using Newtonsoft.Json.Linq;
 using Zest_Client.repository;
+using System.Text;
+using System.Threading;
 
 namespace Bot_Attendance_Payroll.Dialogs
 {
-    [LuisModel("f9a17798-4d13-4310-90a5-19c8bd5582da", "74c7cfca6c3144538ac0f2a21af3b1d3")]
+
+    // [LuisModel("f9a17798-4d13-4310-90a5-19c8bd5582da", "74c7cfca6c3144538ac0f2a21af3b1d3")]
+    // old working all intent [LuisModel("b78b6a80-cbf1-4b34-bbf2-538db25f9a93", "1e27f9b9ff3d4d9b9e43c830f374514f")]
+    [LuisModel("be935b5f-65dc-4a4d-9eab-d7c8652f3429", "afd5de8613574e32884a51182c5e0b50")]
     [Serializable]
     public class AttendanceDialog : LuisDialog<object>
     {
-        //**************************************************Greeting*********************************************************************************     
-        // Greeting Intent
+        public const string Smiley = "😃";
+        public const string GoodNight = "😪";
+        public const string Thumbsup = "👍";
+        public const string AngryMood = "🙄";
+        public int empID;
+        public string token;
+
+        // Global Class to get Employee Id Stored in Context
+        public async Task GetEmployeeId(IDialogContext context)
+        {
+            // var obj = JObject.Parse(context.UserData.ToString());
+            // this.token = (string)obj["Authorization_Token_Attendance"];
+
+            empID = context.UserData.GetValue<int>("empID");
+            token = "ok";
+
+
+        }
+
+        // 1.Greeting
         [LuisIntent("Greeting")]
         public async Task Greeting(IDialogContext context, IAwaitable<object> activity, LuisResult result)
         {
             var msg = await activity as Activity;
             if (msg.Text.Equals("hello", StringComparison.InvariantCultureIgnoreCase))
             {
-                context.PostAsync("Authenticating user...");
+                context.PostAsync("**Login with chatbot to access the details**");
                 //Authenticating User After User Types Hello.Calling User Login Dialog ask for username & password
                 context.Call(new UserLogin(), ResumeAfterTaskDialog);
             }
 
             else if (msg.Text.Equals("good morning", StringComparison.InvariantCultureIgnoreCase))
             {
-                await context.PostAsync("Good Morning Friend");
+                await context.PostAsync("Good Morning Friend" + Smiley);
             }
 
-            else if (msg.Text.Equals("hi", StringComparison.InvariantCultureIgnoreCase))
+            else if (msg.Text.Equals("hi", StringComparison.InvariantCultureIgnoreCase) ||
+                msg.Text.Equals("hola", StringComparison.InvariantCultureIgnoreCase) ||
+                msg.Text.Equals("how d", StringComparison.InvariantCultureIgnoreCase) ||
+                msg.Text.Equals("whats up", StringComparison.InvariantCultureIgnoreCase))
             {
                 await context.PostAsync("hi how can I help you");
+                await context.PostAsync("### Hi! Here is the list of stuff I can help you with" + Smiley + "\n\n" +
+                "Profile :Get details for probation period,joining date,experience,bank account details \n\n" +
+                "Holidays:Know your optional, mandatory holidays \n\n" +
+                "Working hours:Know your net hours,gross hours,in-out timings,late comings,early leavings \n\n" +
+                "also get details of average gross hrs and net hrs and total gross hrs and net hrs \n\n" +
+                "Apply for leave: You can apply for sl,cl,pl etc \n\n" +
+                "Leave balance:Check your leave balance \n\n" +
+                "Attendance Details:check details of lop,mispunch,half days,present days,absent,working days in payroll month \n\n" +
+                "Eligibilty:check your are eligible for Tour,Woh,Encashment,Woh,Od,Compoff,Mispunch \n\n" +
+                "Payroll:get all your payroll details"
+
+                );
+
+
             }
+            else if (msg.Text.Equals("ok", StringComparison.InvariantCultureIgnoreCase) ||
+                      msg.Text.Equals("done", StringComparison.InvariantCultureIgnoreCase) ||
+                      msg.Text.Equals("fine", StringComparison.InvariantCultureIgnoreCase) ||
+                      msg.Text.Equals("alright", StringComparison.InvariantCultureIgnoreCase) ||
+                      msg.Text.Equals("great", StringComparison.InvariantCultureIgnoreCase) ||
+                      msg.Text.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+
+            {
+
+                await context.PostAsync("Good" + Thumbsup);
+            }
+
+            else if (msg.Text.Equals("thanks", StringComparison.InvariantCultureIgnoreCase) ||
+                       msg.Text.Equals("thank you", StringComparison.InvariantCultureIgnoreCase) ||
+                       msg.Text.Equals("thankyou", StringComparison.InvariantCultureIgnoreCase) ||
+                       msg.Text.Equals("thank u", StringComparison.InvariantCultureIgnoreCase) ||
+                       msg.Text.Equals("thnx", StringComparison.InvariantCultureIgnoreCase))
+            {
+
+                await context.PostAsync("you're welcome. glad to be at your service!" + Thumbsup);
+            }
+            else if (msg.Text.Equals("get lost", StringComparison.InvariantCultureIgnoreCase) ||
+                    msg.Text.Equals("you are mad", StringComparison.InvariantCultureIgnoreCase) ||
+                    msg.Text.Equals("I hate you", StringComparison.InvariantCultureIgnoreCase) ||
+                    msg.Text.Equals("go away", StringComparison.InvariantCultureIgnoreCase))
+            {
+
+                await context.PostAsync("lalalallaal I can't heaaaarr youuuuu." + AngryMood);
+            }
+            else if (msg.Text.Equals("good night", StringComparison.InvariantCultureIgnoreCase))
+            {
+
+                await context.PostAsync("That's all for the day !!! take rest g'night" + GoodNight);
+            }
+            else if (msg.Text.Equals("name", StringComparison.InvariantCultureIgnoreCase) ||
+                msg.Text.Equals("what is your name", StringComparison.InvariantCultureIgnoreCase) ||
+                msg.Text.Equals("who are you?", StringComparison.InvariantCultureIgnoreCase))
+            {
+
+                await context.PostAsync("Hey!! I am HRMS BOT" + Smiley);
+
+            }
+
         }
 
-        //********************************************************ATTENDANCE***************************************************************************
-        //1.Leave Encashment
-        //Checks if user can apply for leave encashment.
-        [LuisIntent("Leave_Encashment")]
-        public async Task LeaveEncashment(IDialogContext context, LuisResult result)
+        //2.Profile
+        [LuisIntent("Profile")]
+        public async Task Profile(IDialogContext context, LuisResult result)
         {
-            context.Call(new LeaveEncashment(), this.ResumeAfterTaskDialog);
+            context.Call(new Profile(), this.ResumeAfterTaskDialog);
         }
-
-        //2.Shows which type of leaves user can encash
-        [LuisIntent("Leave_Encashment_types")]
-        public async Task Leave_Encashment_types(IDialogContext context, LuisResult result)
+        
+        //3.Probation_Period
+        [LuisIntent("Probation_Period")]
+        public async Task Probation_period(IDialogContext context, IAwaitable<object> results, LuisResult result)
         {
-            context.Call(new Leave_Encashment_types(), this.ResumeAfterTaskDialog);
+            try
+            {
+
+                GetEmployeeId(context);
+                var activity = await results as Activity;
+                var probation_period = new ProbationPeriodClient();
+                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
+                if (probation_period_response != null && probation_period_response.ResponseJSON != null)
+                {
+                    await context.PostAsync($"Your Probation is of  {probation_period_response.ResponseJSON.ProbationPeriod} months");
+                    context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
+                }
+                else
+                {
+                    await context.PostAsync("Data not found ");
+                }
+            }
+            catch (Exception ex)
+            {
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("Probation_Period");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
+            }
+
+
+
+
+
         }
 
-        //3.Tour Check if user can apply for tour
-        [LuisIntent("Tour")]
-        public async Task CallingTourMethod(IDialogContext context, LuisResult result)
+        //4.Join_date
+        [LuisIntent("Join_date")]
+        public async Task Join_date(IDialogContext context, IAwaitable<object> results, LuisResult result)
         {
-            context.Call(new Tour(), this.ResumeAfterTaskDialog);
+            GetEmployeeId(context);
+            var activity = await results as Activity;
+
+            try
+            {
+                var probation_period = new ProbationPeriodClient();
+                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
+                if (probation_period_response != null && probation_period_response.ResponseJSON != null)
+                {
+                    await context.PostAsync($"Your Joining date is {probation_period_response.ResponseJSON.JoinDate.Value.ToLongDateString()} ");
+                    context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
+                }
+                else
+                {
+                    await context.PostAsync("Data not found ");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("Join_date");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
+            }
+
+
         }
 
-        //4 Tour_Details get tour details
-        [LuisIntent("Tour_Details ")]
-        public async Task Tour_Details(IDialogContext context, LuisResult result)
+        //5.Experience
+        [LuisIntent("Experience")]
+        public async Task Experience(IDialogContext context, IAwaitable<object> results, LuisResult result)
         {
-            context.Call(new TourDetails(), this.ResumeAfterTaskDialog);
+            GetEmployeeId(context);
+            var activity = await results as Activity;
+
+
+            try
+            {
+                var probation_period = new ProbationPeriodClient();
+                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
+                if (probation_period_response != null && probation_period_response.ResponseJSON != null)
+                {
+                    await context.PostAsync($"Your Experience in Cygnet is {probation_period_response.ResponseJSON.Experience} years");
+                    context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
+                }
+                else
+                {
+                    await context.PostAsync("Data not found ");
+                }
+            }
+            catch (Exception ex)
+            {
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("Experience");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
+
+            }
+
+
         }
 
-        //5.OutdoorDuty check if user can apply for outdoor duty
-        [LuisIntent("Outdoor")]
-        public async Task OutdoorApply(IDialogContext context, LuisResult result)
+        //6.check eligibility for tour
+        [LuisIntent("Eligible_Tour")]
+        public async Task Eligible_Tour(IDialogContext context, IAwaitable<object> results, LuisResult result)
         {
-            context.Call(new OutdoorDuty(), this.ResumeAfterTaskDialog);
+            try
+            {
+                var activity = await results as Activity;
+                GetEmployeeId(context);
+                var Lkp_Code_LeaveEncashment = "TOUR";
+                var employee_eligibility_leave_encashment = new EmployeeEligibilityClient();
+                var employee_eligibility_response = await employee_eligibility_leave_encashment.EmployeeEligibilityDetails(token, Convert.ToInt32(empID), Lkp_Code_LeaveEncashment);
+                if (employee_eligibility_response != null && employee_eligibility_response.ResponseJSON != null && employee_eligibility_response.ResponseJSON.LkpCode != null)
+                {
+                    await context.PostAsync($"You Are Eligible for {employee_eligibility_response.ResponseJSON.LkpCode} according to policy ' {employee_eligibility_response.ResponseJSON.PolicyName}' ");
+                    context.Call(new Tour(), this.ResumeAfterTaskDialog);
+                }
+                else
+                {
+                    await context.PostAsync("You are not eligible");
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("Apply Leave");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
+            }
+
+
         }
 
-        //6.Outdoor duty details give users outdoor duty details
-        [LuisIntent("Outdoor_Details")]
-        public async Task Outdoor_Details(IDialogContext context, LuisResult result)
+        //7. Apply for a leave employee applying for leave
+        [LuisIntent("Apply_leave")]
+        public async Task Apply_leave(IDialogContext context, LuisResult result)
         {
-            context.Call(new OutdoorDutyDetails(), this.ResumeAfterTaskDialog);
+            context.Call(new ApplyingLeave(), this.ResumeAfterTaskDialog);
         }
-
-        //7 Work From Home Check if user can apply for work from home
-        [LuisIntent("WorkFromHome")]
-        public async Task CallingWorkFromHome(IDialogContext context, LuisResult result)
+        //7. Apply for a leave employee applying for leave
+        [LuisIntent("Attendance_Details")]
+        public async Task Attendance_Details(IDialogContext context, LuisResult result)
         {
-            context.Call(new WorkFromHome(), this.ResumeAfterTaskDialog);
+            context.Call(new AttendanceDetails(), this.ResumeAfterTaskDialog);
         }
-
-        //8 Work From Home Details of a employee
-        [LuisIntent("WorkFromHome_Details")]
-        public async Task WorkFromHomeDetails(IDialogContext context, LuisResult result)
-        {
-            context.Call(new WorkFromHomeDetails(), this.ResumeAfterTaskDialog);
-        }
-
-        //9.Misspunch details of user for 1 month
-        [LuisIntent("Mispunch")]
-        private async Task CallingMisspunchMethod(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Misspunch(), this.ResumeAfterTaskDialog);
-        }
-
-
-        // 10.Compoff Check user can apply for compoff 
-        [LuisIntent("Compoff_apply ")]
-        private async Task CallingCompOffMethod(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Compoff(), this.ResumeAfterTaskDialog);
-        }
-        //11.Apply for a leave employee applying for leave
-        [LuisIntent("Apply_leave ")]
-        public async Task Apply_Leave(IDialogContext context, LuisResult result)
-        {
-            context.Call(new ApplyingLeave(), ResumeAfterLeaveApply);
-        }
-
-        private async Task ResumeAfterLeaveApply(IDialogContext context, IAwaitable<object> result)
-        {
-            await context.PostAsync("Your leave request is applied successfully");
-        }
-
-        //12 Loss of Pay details
+        //7. Loss of Pay details
         [LuisIntent("Lop")]
         public async Task Lop(IDialogContext context, LuisResult result)
         {
             context.Call(new LopDetails(), this.ResumeAfterTaskDialog);
         }
 
-        //13 Show Late Comings details
-        [LuisIntent("Late_Comings")]
-        public async Task Late_Comings(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Late_Comings(), this.ResumeAfterTaskDialog);
-        }
-
-        //14 Show  Early leaving details
+        //8. Show  Early leaving details
         [LuisIntent("Early_leavings")]
         public async Task Early_leavings(IDialogContext context, LuisResult result)
         {
-            context.Call(new Net_Hrs(), this.ResumeAfterTaskDialog);
+            context.Call(new Early_leavings(), this.ResumeAfterTaskDialog);
+
         }
 
-        //*************************************************PROFILE***********************************************************************************
-
-        // 15.From Flow for Profile
-        [LuisIntent("Profile")]
-        public async Task CallingProfileMethod(IDialogContext context, LuisResult result)
+        //9. Absent details
+        [LuisIntent("Absent")]
+        public async Task Absent(IDialogContext context, LuisResult result)
         {
-
-            context.Call(new Profile(), ResumeAfterTaskDialog);
+            context.Call(new Absent(), this.ResumeAfterTaskDialog);
         }
-
-        //16:Probation_Period
-        [LuisIntent("Probation_Period")]
-        public async Task Probation_period(IDialogContext context,IAwaitable<object> results, LuisResult result)
+        //10. Leave balance
+        [LuisIntent("Leave_Balance")]
+        public async Task Leave_Balance(IDialogContext context, IAwaitable<object> results, LuisResult result)
         {
-            var activity = await results as Activity;
-            StateClient stateClient = activity.GetStateClient();
-            BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-            var obj = JObject.Parse(userData.Data.ToString());
-            var token = (string)obj["token"];
-
-
-            if (token == null)
+            try
             {
-                await context.PostAsync("Need to Login to access data");
-                context.Call(new UserLogin(), ResumeAfteNullToken);
+                var activity = await results as Activity;
+                GetEmployeeId(context);
+                var employee_leave_balance = new EmployeeLeaveBalanceClient();
+                var employee_leave_balance_response = await employee_leave_balance.EmployeeLeaveBalanceDetails(token, Convert.ToInt32(empID));
+                if (employee_leave_balance_response.ResponseJSON != null && employee_leave_balance_response != null && employee_leave_balance_response.ResponseJSON.Count != 0)
+                {
+                    List<EmployeeLeaveBalance> data = employee_leave_balance_response.ResponseJSON;
+                    List<string> values = new List<string>();
+                    foreach (var dataresp in data)
+                    {
+                        values.Add("**Leave-Category**" + "---" + dataresp.LeaveCategoryName);
+                        values.Add("**Balance**" + "---" + dataresp.ClosingBalance);
+                        values.Add("------------------------------------------");
+                        values.Add("------------------------------------------");
+                    }
+                    string employee_leave_balance_list_value = string.Join("<br/>\r\n", values);
+                    await context.PostAsync(employee_leave_balance_list_value);
+                    context.Done(true);
+                }
+                else
+                {
+                    await context.PostAsync("Data not found");
+                }
+
+
 
             }
-            if (token != null)
+            catch (Exception ex)
             {
-
-                StateClient empCode1 = activity.GetStateClient();
-                BotData empCodeu = await empCode1.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-                var ob = JObject.Parse(empCodeu.Data.ToString());
-                var empID = (int)obj["empID"];
-                var probation_period = new ProbationPeriodClient();
-                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
-                await context.PostAsync($"Your Probation is of  {probation_period_response.ResponseJSON.ProbationPeriod} months");
-                context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("Leave_Balance");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
             }
 
-            
+
         }
-        private async Task ResumeAfteNullToken(IDialogContext context, IAwaitable<object> result)
+
+        //11.Misspunch details of user for 1 month
+        [LuisIntent("Mispunch")]
+        private async Task CallingMisspunchMethod(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync("Login Successful!!!");
+            context.Call(new Mispunch(), this.ResumeAfterTaskDialog);
         }
 
-        //17:Join_date
-        [LuisIntent("Join_date")]
-        public async Task Join_date(IDialogContext context, IAwaitable<object> results,LuisResult result)
+        //12.total gross hours of payroll month
+        [LuisIntent("Total_Gross_Hours")]
+        private async Task Total_Gross_Hours(IDialogContext context, LuisResult result)
         {
-            
-            var activity = await results as Activity;
-            StateClient stateClient = activity.GetStateClient();
-            BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-            var obj = JObject.Parse(userData.Data.ToString());
-            var token = (string)obj["token"];
-
-
-            if (token == null)
-            {
-                await context.PostAsync("Need to Login to access data");
-                context.Call(new UserLogin(), ResumeAfteNullToken);
-
-            }
-            if (token != null)
-            {
-
-                StateClient empCode1 = activity.GetStateClient();
-                BotData empCodeu = await empCode1.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-                var ob = JObject.Parse(empCodeu.Data.ToString());
-                var empID = (int)obj["empID"];
-                var probation_period = new ProbationPeriodClient();
-                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
-                await context.PostAsync($"Your Join date is {probation_period_response.ResponseJSON.JoinDate.ToLongDateString()} ");
-                context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
-            }
-           // context.Call(new Join_date(), this.ResumeAfterTaskDialog);
+            context.Call(new Total_Gross_Hours(), this.ResumeAfterTaskDialog);
         }
 
-        //18:Experience
-        [LuisIntent("Experience")]
-        public async Task Experience(IDialogContext context, IAwaitable<object> results, LuisResult result)
+        //13.total net hours of payroll month
+        [LuisIntent("Total_Net_Hours")]
+        private async Task Total_Net_Hours(IDialogContext context, LuisResult result)
         {
-            var activity = await results as Activity;
-            StateClient stateClient = activity.GetStateClient();
-            BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-            var obj = JObject.Parse(userData.Data.ToString());
-            var token = (string)obj["token"];
-
-
-            if (token == null)
-            {
-                await context.PostAsync("Need to Login to access data");
-                context.Call(new UserLogin(), ResumeAfteNullToken);
-
-            }
-            if (token != null)
-            {
-
-                StateClient empCode1 = activity.GetStateClient();
-                BotData empCodeu = await empCode1.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-                var ob = JObject.Parse(empCodeu.Data.ToString());
-                var empID = (int)obj["empID"];
-                var probation_period = new ProbationPeriodClient();
-                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
-                await context.PostAsync($"Your Experience in Cygnet is {probation_period_response.ResponseJSON.Experience} years");
-                context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
-            }
+            context.Call(new Total_Net_Hours(), this.ResumeAfterTaskDialog);
         }
 
-        //19:Bank_Account
-        [LuisIntent("Bank_Account")]
-        public async Task Bank_Account(IDialogContext context,IAwaitable<object> results, LuisResult result)
+        //14.total present days of payroll month
+        [LuisIntent("Present_Days")]
+        private async Task Present_Days(IDialogContext context, LuisResult result)
         {
-            var activity = await results as Activity;
-            StateClient stateClient = activity.GetStateClient();
-            BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-            var obj = JObject.Parse(userData.Data.ToString());
-            var token = (string)obj["token"];
-
-
-            if (token == null)
-            {
-                await context.PostAsync("Need to Login to access data");
-                context.Call(new UserLogin(), ResumeAfteNullToken);
-
-            }
-            if (token != null)
-            {
-
-                StateClient empCode1 = activity.GetStateClient();
-                BotData empCodeu = await empCode1.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-                var ob = JObject.Parse(empCodeu.Data.ToString());
-                var empID = (int)obj["empID"];
-                var probation_period = new ProbationPeriodClient();
-                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
-                await context.PostAsync($"Your salary is deposited in {probation_period_response.ResponseJSON.BankName} ");
-                context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
-            }
-        }
-        //:Increment_Period
-        [LuisIntent("Increment_Period")]
-        public async Task Increment_Period(IDialogContext context, IAwaitable<object> results,LuisResult result)
-        {
-            var activity = await results as Activity;
-            StateClient stateClient = activity.GetStateClient();
-            BotData userData = await stateClient.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-            var obj = JObject.Parse(userData.Data.ToString());
-            var token = (string)obj["token"];
-
-
-            if (token == null)
-            {
-                await context.PostAsync("Need to Login to access data");
-                context.Call(new UserLogin(), ResumeAfteNullToken);
-
-            }
-            if (token != null)
-            {
-
-                StateClient empCode1 = activity.GetStateClient();
-                BotData empCodeu = await empCode1.BotState.GetUserDataAsync(activity.ChannelId, activity.From.Id);
-                var ob = JObject.Parse(empCodeu.Data.ToString());
-                var empID = (int)obj["empID"];
-                var probation_period = new ProbationPeriodClient();
-                var probation_period_response = await probation_period.ProbationPeroid(token, empID);
-                await context.PostAsync($"Your increment period is {probation_period_response.ResponseJSON.incrementperiod} months");
-                context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
-            }
+            context.Call(new Present_Days(), this.ResumeAfterTaskDialog);
         }
 
-        //*******************************************Holidays***************************************************************************************
-        //20.HOLIDAYS
-        [LuisIntent("Holidays")]
-        public async Task Holidays(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Holidays(), this.ResumeAfterTaskDialog);
-        }
-
-        //21.Work_on_holiday
-        [LuisIntent("Work_on_holiday")]
-        public async Task Work_on_holiday(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Work_on_holiday(), this.ResumeAfterTaskDialog);
-
-        }
-        //22.Hrs_work_holiday
-        [LuisIntent("Hrs_work_holiday")]
-        public async Task Hrs_work_holiday(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Hrs_work_holiday(), this.ResumeAfterTaskDialog);
-        }
-
-        //*********************************************PAYROLL***************************************************************************************
-
-        //23.Calling Payroll
-        [LuisIntent("Payroll")]
-        public async Task CallingPayrollMethod(IDialogContext context, LuisResult result)
-        {
-            var payrollform = FormDialog.FromForm(Payroll.PayrollForm, FormOptions.PromptInStart);
-            context.Call(payrollform, this.ResumeAfterTaskDialog);
-        }
-
-        //24.House_rent_allowance
-        [LuisIntent("House_rent_allowance")]
-        public async Task House_rent_allowance(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Hrs_work_holiday(), this.ResumeAfterTaskDialog);
-        }
-        //25.Dearness_allowance
-        [LuisIntent("Dearness_allowance")]
-        public async Task Dearness_allowance(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Dearness_allowance(), this.ResumeAfterTaskDialog);
-        }
-        //26.Medical_allowance
-        [LuisIntent("Medical_allowance")]
-        public async Task Medical_allowance(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Medical_allowance(), this.ResumeAfterTaskDialog);
-        }
-        //27.Lta_allowance 
-        [LuisIntent("Lta_allowance")]
-        public async Task Lta_allowance(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Lta_allowance(), this.ResumeAfterTaskDialog);
-        }
-        //28.Tax_deductions
-        [LuisIntent("Tax_deductions")]
-        public async Task Tax_deductions(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Tax_deductions(), this.ResumeAfterTaskDialog);
-        }
-        //29.Payslip
-        [LuisIntent("Payslip")]
-        public async Task Payslip(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Payslip(), this.ResumeAfterTaskDialog);
-        }
-        //30.Base_pay
-        [LuisIntent("Base_pay")]
-        public async Task Base_pay(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Base_pay(), this.ResumeAfterTaskDialog);
-        }
-        //31.Gross_pay
-        [LuisIntent("Gross_pay")]
-        public async Task Gross_pay(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Gross_pay(), this.ResumeAfterTaskDialog);
-        }
-        //32.Net_pay
-        [LuisIntent("Net_pay")]
-        public async Task Net_pay(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Net_pay(), this.ResumeAfterTaskDialog);
-        }
-        //33.Pf_contribution
-        [LuisIntent("Pf_contribution")]
-        public async Task Pf_contribution(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Pf_contribution(), this.ResumeAfterTaskDialog);
-        }
-
-        //34.Pf_number
-        [LuisIntent("Pf_number")]
-        public async Task Pfnumber(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Pf_number(), this.ResumeAfterTaskDialog);
-        }
-
-        //35.Professional_tax_deducted
-        [LuisIntent("Professional_tax_deducted")]
-        public async Task Professional_tax_deducted(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Professional_tax_deducted(), this.ResumeAfterTaskDialog);
-        }
-        //36.Esi_tax
-        [LuisIntent("Esi_tax")]
-        public async Task Esi_tax(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Esi_tax(), this.ResumeAfterTaskDialog);
-        }
-
-        //37.Investment_details 
-        [LuisIntent("Investment_details")]
-        public async Task Investment_details(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Hrs_work_holiday(), this.ResumeAfterTaskDialog);
-        }
-
-        //38.Section 80c
-        [LuisIntent("80c")]
-        public async Task Section_80_C(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Section80C(), this.ResumeAfterTaskDialog);
-        }
-
-        //39.Section 80d
-        [LuisIntent("80d")]
-        public async Task Section_80_D(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Section80D(), this.ResumeAfterTaskDialog);
-        }
-        //40.Tds_deduction 
-        [LuisIntent("Tds_deduction")]
-        public async Task Tds_deduction(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Tds_deduction(), this.ResumeAfterTaskDialog);
-        }
-        //41.Allowances 
-        [LuisIntent("Allowances")]
-        public async Task Allowances(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Allowances(), this.ResumeAfterTaskDialog);
-        }
-
-
-
-        //******************************************** Work Week *******************WORK TIME*****************************************
-
-        //42:gross ,net and avg hrs FORM FLOW SELECTION
+        //15:gross ,net and avg hrs FORM FLOW SELECTION
         [LuisIntent("Working_Hrs")]
         public async Task Working_Hrs(IDialogContext context, LuisResult result)
         {
             context.Call(new Working_Hrs(), this.ResumeAfterTaskDialog);
         }
-
-        //43.Gross_Hrs
-        [LuisIntent("Gross_Hrs")]
-        public async Task Gross_Hrs(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Gross_Hrs(), this.ResumeAfterTaskDialog);
-        }
-
-        //44.Avg_Hrs
-        [LuisIntent("Avg_Hrs")]
-        public async Task Avg_Hrs(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Avg_Hrs(), this.ResumeAfterTaskDialog);
-        }
-
-        //45.Net_Hrs
-        [LuisIntent("Net_Hrs")]
-        public async Task Net_Hrs(IDialogContext context, LuisResult result)
-        {
-            context.Call(new Net_Hrs(), this.ResumeAfterTaskDialog);
-        }
-
-        //46.in/out time for month
+        //16.in/out time for month
         [LuisIntent("In_Out_Time")]
         public async Task In_Out_Time(IDialogContext context, LuisResult result)
         {
             context.Call(new In_Out_Time(), this.ResumeAfterTaskDialog);
         }
-        //47.HalfDay
+        //17.HalfDay
         [LuisIntent("Half_day")]
         public async Task Half_day(IDialogContext context, LuisResult result)
         {
             context.Call(new HalfDay(), this.ResumeAfterTaskDialog);
         }
 
+        //18.HOLIDAYS
+        [LuisIntent("All_Holidays")]
+        public async Task Holidays(IDialogContext context, IAwaitable<object> results, LuisResult result)
+        {
+            this.GetEmployeeId(context);
+            var activity = await results as Activity;
+            try
+            {
+                var all_holiday_details = new AllHolidaysClient();
+                var holiday_response = await all_holiday_details.AllHolidaysDetails(token, Convert.ToInt32(this.empID));
+                if (holiday_response != null && holiday_response.ResponseJSON != null)
+                {
+                    List<HolidayList> data = holiday_response.ResponseJSON;
+                    List<string> values = new List<string>();
+
+                    foreach (var dataresp in data)
+                    {
+                        values.Add("**Holiday Name**" + ":::" + dataresp.HolidayName);
+                        values.Add("**Holiday Date**" + ":::" + dataresp.ObservingDate.ToLongDateString());
+                        values.Add("------------------------------------------");
+                        values.Add("------------------------------------------");
+                    }
+                    string all_holiday_list_value = string.Join("<br/>\r\n", values);
+                    await context.PostAsync(all_holiday_list_value);
+                    context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
+                }
+            }
+            catch (Exception ex)
+            {
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("All_Holidays");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
+            }
+        }
+
+        //19.Payslip
+        [LuisIntent("Payslip")]
+        public async Task Payslip(IDialogContext context, LuisResult result)
+        {
+            context.Call(new Payslip(), this.ResumeAfterTaskDialog);
+        }
+
+        //20.Investment_details 
+        [LuisIntent("Investment_details")]
+        public async Task Investment_details(IDialogContext context, LuisResult result)
+        {
+            context.Call(new Investment_details(), this.ResumeAfterTaskDialog);
+        }
+
+        //21.Section 80c
+        [LuisIntent("80c")]
+        public async Task Section_80_C(IDialogContext context, LuisResult result)
+        {
+            context.Call(new Section80C(), this.ResumeAfterTaskDialog);
+        }
+
+        //22.Section 80d
+        [LuisIntent("80d")]
+        public async Task Section_80_D(IDialogContext context, LuisResult result)
+        {
+            context.Call(new Section80D(), this.ResumeAfterTaskDialog);
+        }
+
+        //23.Tds_deduction 
+        [LuisIntent("Tds_deduction")]
+        public async Task Tds_deduction(IDialogContext context, LuisResult result)
+        {
+            context.Call(new Tds_deduction(), this.ResumeAfterTaskDialog);
+        }
+
+
         //**********************************************************NONE*******************************************************************************
 
-        //48 None Intent called no intent is matched
+        //24 None Intent called no intent is matched
         [LuisIntent("")]
         public async Task None(IDialogContext context, LuisResult result)
         {
             await context.PostAsync("Sorry I dont know what you wanted.....");
-            await context.PostAsync("### What are you looking for? <br>" +
-                "1.Leave Encashment:" + "Try message like *leave encashment*<br>" +
-                "2.Tour:" + "Type *tour*<br>" +
-                "3.Outdoor Duty:" + "Type *Outdoor Duty*<br>" +
-                "4.Work From Home:" + "Type *Work From Home*<br>" +
-                "5.Compoff:" + "Type *Compoff*<br>" +
-                "6.Mispunch:" + "Type *Mispunch*<br>" +
-                "7.Working Hrs:" + "Type *Working Hrs*<br>" +
-                "8.Holidays:" + "Type *Holidays*<br>" +
-                "9.Payroll:" + "Type *Payroll*<br>" +
-                "10.Profile:" + "Type *Profile*<br>" +
-                "You can get information about above mention categories:"
-
-                );
+            await context.PostAsync("Type 'help' to see what I can do for you" + Smiley);
             context.Wait(MessageReceived);
         }
 
@@ -540,23 +518,177 @@ namespace Bot_Attendance_Payroll.Dialogs
 
         private async Task ResumeAfterTaskDialog(IDialogContext context, IAwaitable<object> result)
         {
-            await context.PostAsync("how else can i help you");
-            await context.PostAsync("### What are you looking for? <br>" +
-                "1.Leave Encashment:" + "Try message like *leave encashment*<br>" +
-                "2.Tour:" + "Type *tour*<br>" +
-                "3.Outdoor Duty:" + "Type *Outdoor Duty*<br>" +
-                "4.Work From Home:" + "Type *Work From Home*<br>" +
-                "5.Compoff:" + "Type *Compoff*<br>" +
-                "6.Mispunch:" + "Type *Mispunch*<br>" +
-                "7.Working Hrs:" + "Type *Working Hrs*<br>" +
-                "8.Holidays:" + "Type *Holidays*<br>" +
-                "9.Payroll:" + "Type *Payroll*<br>" +
-                "10.Profile:" + "Type *Profile*<br>"
-                );
-
+            await context.PostAsync("how can i help you ?");
             context.Wait(MessageReceived);
         }
-    }
 
-   
+        //25 help
+        [LuisIntent("Help")]
+        public async Task Help(IDialogContext context, LuisResult result)
+        {
+            await context.PostAsync("hi how can I help you");
+            await context.PostAsync("### Hi! Here is the list of stuff I can help you with" + Smiley + "\n\n" +
+            "Profile :Get details for probation period,joining date,experience \n\n" +
+            "Holidays:Know Company holiday list details \n\n" +
+            "Working hours:Know your net hours,gross hours,early leavings \n\n" +
+            "Apply for leave: You can apply for sl,cl,pl etc \n\n" +
+            "Leave balance:Check your leave balance \n\n" +
+            "Attendance Details:check details of lop,mispunch,half days,present days,absent in payroll month \n\n" +
+            "Apply for Tour:check your are eligible for Tour \n\n" +
+            "Payslip:get your payslip details"
+            );
+            var Type = FormDialog.FromForm(HelpFormFlow.HelpForm, FormOptions.PromptInStart);
+            context.Call(Type, this.DisplayHelpSelection);
+        }
+        private async Task ResumeAfteNullToken(IDialogContext context, IAwaitable<object> result)
+        {
+            await context.PostAsync("Login Successful!!!");
+        }
+        private async Task DisplayHelpSelection(IDialogContext context, IAwaitable<HelpFormFlow> result)
+        {
+            var selection = await result;
+
+            switch (selection.helpType.ToString())
+            {
+                case "List_of_Holidays":
+                    {
+
+                        this.GetEmployeeId(context);
+                        try
+                        {
+                            var all_holiday_details = new AllHolidaysClient();
+                            var holiday_response = await all_holiday_details.AllHolidaysDetails(token, Convert.ToInt32(this.empID));
+                            if (holiday_response != null && holiday_response.ResponseJSON != null)
+                            {
+                                List<HolidayList> data = holiday_response.ResponseJSON;
+                                List<string> values = new List<string>();
+
+                                foreach (var dataresp in data)
+                                {
+                                    values.Add("**Holiday Name**" + ":::" + dataresp.HolidayName);
+                                    values.Add("**Holiday Date**" + ":::" + dataresp.ObservingDate.ToLongDateString());
+                                    values.Add("------------------------------------------");
+                                    values.Add("------------------------------------------");
+                                }
+                                string all_holiday_list_value = string.Join("<br/>\r\n", values);
+                                await context.PostAsync(all_holiday_list_value);
+                                context.Call(new ResumeAfter(), this.ResumeAfterTaskDialog);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                            StringBuilder sb = new StringBuilder();
+                            sb.Append("InnerException : " + ex.InnerException);
+                            sb.Append("All_Holidays");
+                            sb.Append(Environment.NewLine);
+                            sb.Append("Message : " + ex.Message);
+                            sb.Append(Environment.NewLine);
+                            System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                            sb.Clear();
+                            await context.PostAsync("Data not found");
+                            context.Done(true);
+                        }
+                    }
+                    break;
+                case "Profile":
+                    context.Call(new Profile(), this.ResumeAfterTaskDialog);
+                    break;
+                case "Working_Hours":
+                    context.Call(new WorkTime(), this.ResumeAfterTaskDialog);
+                    break;
+                case "Apply_for_leave":
+                    context.Call(new ApplyingLeave(), this.ResumeAfterTaskDialog);
+                    break;
+                case "Leave_Balance":
+                    try
+                    {
+                        GetEmployeeId(context);
+                        var employee_leave_balance = new EmployeeLeaveBalanceClient();
+                        var employee_leave_balance_response = await employee_leave_balance.EmployeeLeaveBalanceDetails(token, Convert.ToInt32(empID));
+                        if (employee_leave_balance_response.ResponseJSON != null && employee_leave_balance_response != null && employee_leave_balance_response.ResponseJSON.Count != 0)
+                        {
+                            List<EmployeeLeaveBalance> data = employee_leave_balance_response.ResponseJSON;
+                            List<string> values = new List<string>();
+                            foreach (var dataresp in data)
+                            {
+                                values.Add("**Leave-Category**" + "---" + dataresp.LeaveCategoryName);
+                                values.Add("**Balance**" + "---" + dataresp.ClosingBalance);
+                                values.Add("------------------------------------------");
+                                values.Add("------------------------------------------");
+                            }
+                            string employee_leave_balance_list_value = string.Join("<br/>\r\n", values);
+                            await context.PostAsync(employee_leave_balance_list_value);
+                            context.Done(true);
+                        }
+                        else
+                        {
+                            await context.PostAsync("Data not found");
+                        }
+
+
+
+                    }
+                    catch (Exception ex)
+                    {
+                        string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append("InnerException : " + ex.InnerException);
+                        sb.Append("Leave_Balance");
+                        sb.Append(Environment.NewLine);
+                        sb.Append("Message : " + ex.Message);
+                        sb.Append(Environment.NewLine);
+                        System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                        sb.Clear();
+                        await context.PostAsync("Data not found");
+                        context.Done(true);
+                    }
+                    break;
+                case "Attendance_Details":
+                    context.Call(new AttendanceDetails(), this.ResumeAfterTaskDialog);
+                    break;
+                case "Apply_for_tour":
+                    try
+                    {
+                      
+                        GetEmployeeId(context);
+                        var Lkp_Code_LeaveEncashment = "TOUR";
+                        var employee_eligibility_leave_encashment = new EmployeeEligibilityClient();
+                        var employee_eligibility_response = await employee_eligibility_leave_encashment.EmployeeEligibilityDetails(token, Convert.ToInt32(empID), Lkp_Code_LeaveEncashment);
+                        if (employee_eligibility_response != null && employee_eligibility_response.ResponseJSON != null && employee_eligibility_response.ResponseJSON.LkpCode != null)
+                        {
+                            await context.PostAsync($"You Are Eligible for {employee_eligibility_response.ResponseJSON.LkpCode} according to policy ' {employee_eligibility_response.ResponseJSON.PolicyName}' ");
+                            context.Call(new Tour(), this.ResumeAfterTaskDialog);
+                        }
+                        else
+                        {
+                            await context.PostAsync("You are not eligible");
+                        }
+
+
+                    }
+                    catch (Exception ex)
+                    {
+                        string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append("InnerException : " + ex.InnerException);
+                        sb.Append("Apply Leave");
+                        sb.Append(Environment.NewLine);
+                        sb.Append("Message : " + ex.Message);
+                        sb.Append(Environment.NewLine);
+                        System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                        sb.Clear();
+                        await context.PostAsync("Data not found");
+                        context.Done(true);
+                    }
+                    break;
+                case "Payslip":
+                    context.Call(new Payroll(), this.ResumeAfterTaskDialog);
+                    break;
+            }
+
+        }
+    }
+    
+
 }

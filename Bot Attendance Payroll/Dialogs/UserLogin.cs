@@ -34,74 +34,72 @@ namespace Bot_Attendance_Payroll.Dialogs
         public async Task StartAsync(IDialogContext context)
         {
 
-            context.PostAsync("Please Enter your username>>..");
+            context.PostAsync("Please Enter your Username");
 
-            context.Wait(abc);
-           
-           
-         
+            context.Wait(Enter_password);
         }
-        private async Task abc(IDialogContext context, IAwaitable<object> result)
+        private async Task Enter_password(IDialogContext context, IAwaitable<object> result)
         {
 
             var user = await result as Activity;
             username = (user.Text);
-
-            await context.PostAsync("Enter password:");
-            context.Wait(abc2);
-
-            
-
+            await context.PostAsync("Enter Password");
+            context.Wait(Login);
         }
-        private async Task abc2(IDialogContext context, IAwaitable<object> result)
+        private async Task Login(IDialogContext context, IAwaitable<object> result)
         {
 
             var pass = await result as Activity;
             password = (pass.Text);
             var auth = new BotAuthenticationClient();
             var s = await auth.BotAuthentication(username, password);
-            int id = s.ResponseJSON.empID;
-            string s1 = s.ResponseJSON.loginID;
+           // int id = s.ResponseJSON.empID;
+           // string s1 = s.ResponseJSON.loginID;
 
-            if (s1!= null)
+            if (s.ResponseJSON != null && s.ResponseJSON.loginID!= null )
             {
-                await context.PostAsync("Welcome" + s.ResponseJSON.loginID);
-                await context.PostAsync("Your EmployeeDetails Code is " + s.ResponseJSON.empID);
+                int id = s.ResponseJSON.empID;
+                string s1 = s.ResponseJSON.loginID;
                 context.UserData.SetValue("empID", id);
-                await context.PostAsync("UserLogin successfull");
-
                 var ac = new AuthenticationCalling();
                 string t = await ac.TokenCalling(username, password);
 
                 if (t == null)
                 {
-                    context.PostAsync("you have enterd wrong credentials<br>" + " re-login<br>" + "Enter your username");
-                    context.Wait(abc);
+                    context.PostAsync("you have enterd wrong credentials");
+                    await context.PostAsync("Enter your username");
+                    context.Wait(Enter_password);
                 }
 
                 if (t != null)
                 {
-                    await context.PostAsync($"Response is {t}");
-                    context.UserData.SetValue("token", t);
+                    //await context.PostAsync($"Response is {t}");
+                    await context.PostAsync("Welcome " + s.ResponseJSON.loginID+"--"+"You have successfully logged in");
+                    //await context.PostAsync("Your EmployeeDetails Code is " + s.ResponseJSON.empID);
+                    
+                    //await context.PostAsync("UserLogin successfull");
+                    context.UserData.SetValue("Authorization_Token_Attendance", t);
                     context.Done(true);
                 }
             }
             else
             {
-                await context.PostAsync("Wrong id or password" + " re-login<br>" + "Enter your username");
-                context.Wait(abc);
+                // await context.PostAsync("Wrong id or password" + " re-login<br>" + "Enter your username");
+                context.PostAsync("you have enterd wrong credentials");
+                await context.PostAsync("Re-Enter your Username");
+                context.Wait(Enter_password);
             }
-            /*Conversation.UpdateContainer(
+            /*conversation.updatecontainer(
                builder =>
                {
-                   var store = new InMemoryDataStore();
-                   builder.Register(c => store)
-                          .Keyed<IBotDataStore<BotData>>(t)
-                          .AsSelf()
-                          .SingleInstance();
+                   var store = new inmemorydatastore();
+                   builder.register(c => store)
+                          .keyed<ibotdatastore<botdata>>(t)
+                          .asself()
+                          .singleinstance();
 
                });*/
-           
+
         }
        
     }

@@ -1,12 +1,14 @@
 ﻿using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.FormFlow;
 using Microsoft.Bot.Connector;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using System.Web.Services.Description;
+using Zest_Client.repository;
 
 namespace Bot_Attendance_Payroll.Dialogs
 {
@@ -14,134 +16,61 @@ namespace Bot_Attendance_Payroll.Dialogs
     public class WorkTime : IDialog<object>
     {
 
+
+
         public async Task StartAsync(IDialogContext context)
         {
-            var formFLow = FormDialog.FromForm(WorkTimeFormFlow.WorkTimeForm, FormOptions.PromptInStart);
-            context.Call(formFLow, WorkTimeFormLoaded);
-
+            var Type = FormDialog.FromForm(WorkTimeFormFlow.WorkTimeForm, FormOptions.PromptInStart);
+            context.Call(Type, WorkTimeSelection);
 
         }
-        
-        public async Task WorkTimeFormLoaded(IDialogContext context, IAwaitable<object> result)
+
+        private async Task WorkTimeSelection(IDialogContext context, IAwaitable<WorkTimeFormFlow> result)
         {
-
-            var msg = await result as Activity;
-           await context.PostAsync("Please Type your selection");
-            context.Wait(TypeSelection);
-
-           
-        }
-
-        private async Task TypeSelection(IDialogContext context, IAwaitable<object> result)
-        {
-            var msg = await result as Activity;
-            if (msg.Text.Equals("Gross Hrs", StringComparison.InvariantCultureIgnoreCase))
+            try
             {
-                context.Wait(GrossTimeMethod);
+                var selection = await result;
+                if (selection.worktimeTypes.ToString().Equals("Total_Gross_Hrs"))
+                {
+                    context.Call(new Total_Gross_Hours(), this.ResumeAfterTaskDialog);
+                }
+                else if (selection.worktimeTypes.ToString().Equals("Totat_Net_Hrs"))
+                {
+                    context.Call(new Total_Net_Hours(), this.ResumeAfterTaskDialog);
+                }
+                else if (selection.worktimeTypes.ToString().Equals("Detail_Working_Hrs"))
+                {
+                    context.Call(new Working_Hrs(), this.ResumeAfterTaskDialog);
+                }
+                
+                else if (selection.worktimeTypes.ToString().Equals("In_Out_Time"))
+                {
+                    context.Call(new In_Out_Time(), this.ResumeAfterTaskDialog);
+                }
+            }
+            catch (Exception ex)
+            {
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("Work Time");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
             }
 
-            else if(msg.Text.Equals("Net Hrs",StringComparison.InvariantCultureIgnoreCase))
-            {
-                context.Wait(NetHrsMethod);
-            }
-            else if(msg.Text.Equals("RequiredNetHrs",StringComparison.InvariantCultureIgnoreCase))
-            {
-                context.Wait(RequiredNetHrs);
-            }
-            else if(msg.Text.Equals(" HalfdayMinNetHrs",StringComparison.InvariantCultureIgnoreCase))
-            {
-                context.Wait(HalfDay);
-            }
-            else if(msg.Text.Equals("GraceTime",StringComparison.InvariantCultureIgnoreCase))
-            {
-                context.Wait(GraceTime);
-            }
-            else if(msg.Text.Equals("BreakTime",StringComparison.InvariantCultureIgnoreCase))
-            {
-                context.Wait(BreakTime);
-            }
-          
-
         }
-
-        private async Task BreakTime(IDialogContext context, IAwaitable<object> result)
+        private async Task ResumeAfterTaskDialog(IDialogContext context, IAwaitable<object> result)
         {
-            await context.PostAsync("You can get 20 min breaks");
+            context.Done(true);
         }
-
-        private async Task GraceTime(IDialogContext context, IAwaitable<object> result)
-        {
-            await context.PostAsync("You can get 30 min grace time");
-        }
-
-        private async Task HalfDay(IDialogContext context, IAwaitable<object> result)
-        {
-            await context.PostAsync("You need to work 4 hrs 30 min on half day");
-        }
-
-        private async Task RequiredNetHrs(IDialogContext context, IAwaitable<object> result)
-        {
-            await context.PostAsync("You need to work 4 hrs more to complete net hrs");
-        }
-
-        private async Task NetHrsMethod(IDialogContext context, IAwaitable<object> result)
-        {
-            await context.PostAsync(" Your Net hrsare 8 hrs");
-        }
-
-
-        private async Task GrossTimeMethod(IDialogContext context, IAwaitable<object> result)
-        {
-            var msg = await result as Activity;
-            await context.PostAsync("Which GrossTime Detail you want?");
-            await context.PostAsync("1.daily<br>" + "2.monthly<br>" + "3.Quatrly<br>" + "4.yearly<br>");
-            await context.PostAsync("PLease Type your selection");
-            context.Wait(TimeSelection);
-        }
-        
-
-        private async Task TimeSelection(IDialogContext context, IAwaitable<object> result)
-        {
-        var msg = await result as Activity;
-
-            if (msg.Text.Equals("daily", StringComparison.InvariantCultureIgnoreCase))
-            {
-                await context.PostAsync("Your daily gross time is 8:30 hrs");
-            }
-
-            else if (msg.Text.Equals("monthly", StringComparison.InvariantCultureIgnoreCase))
-            {
-
-                await context.PostAsync("Download your montly gross tome report");
-                var message = context.MakeMessage();
-                var selectedCard = await result;
-
-                var attachment = GetAttachment(selectedCard);
-                message.Attachments.Add(attachment);
-
-                await context.PostAsync(message);
-
-                context.Wait(this.TimeSelection);
-
-            }
-            context.Done<object>(result);
-
-
-        }
-
-        private static Attachment GetAttachment(object selectedCard)
-        {
-            
-            return new Attachment
-            {
-                  
-            ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                ContentUrl = "C:/Users/Vrushali/source/repos/Bot Attendance Payroll/Bot Attendance Payroll/File/Holiday.docx",
-                Name = "monthly repot",
-            };
-           
-        }
-
+    }
+  
 
 }
-    }
+
+

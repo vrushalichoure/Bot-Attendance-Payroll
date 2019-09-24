@@ -14,25 +14,24 @@ namespace Bot_Attendance_Payroll.Dialogs
         public async Task StartAsync(IDialogContext context)
         {
             await context.PostAsync("Which month payslip?");
-            context.Wait(this.abc);
+            context.Wait(this.payslip);
         }
 
-        private async Task abc(IDialogContext context, IAwaitable<object> result)
+        private async Task payslip(IDialogContext context, IAwaitable<object> result)
         {
             var message = await result;
             var msg = context.MakeMessage();
             await context.PostAsync("Payslip Generated..");
 
 
-       
 
             Attachment attachment1 = new Attachment();
             attachment1.ContentType = "image/png";
-            attachment1.ContentUrl = "C:/Users/Vrushali/source/repos/Bot Attendance Payroll/Bot Attendance Payroll/Images/payslip.png";
+            attachment1.ContentUrl = "https://documentation.thesaurussoftware.com/images/tpm/feature-payslipb1.PNG";
             msg.Attachments.Add(attachment1);
             await context.PostAsync(msg);
             context.Done(message);
-            
+
         }
     }
 }

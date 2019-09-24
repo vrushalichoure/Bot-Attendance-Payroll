@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -10,25 +11,35 @@ namespace Zest_Client
 {
     public class AuthenticationCalling
     {
-      
-        public  async Task <string>TokenCalling(string username, string password)
+
+        public async Task<string> TokenCalling(string username, string password)
         {
-           
 
-            HttpClient cons = new HttpClient();
-            cons.BaseAddress = new Uri("http://localhost:57144/");
-            cons.DefaultRequestHeaders.Accept.Clear();
-            cons.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                var tag = new AuthenticationRequest { UserName = username, Password = password, AuthenticationType = "form" };
+            //string url = ConfigurationManager.AppSettings["url"];
+            //HttpClient cons = new HttpClient();
+            //cons.BaseAddress = new Uri(url);
+            //cons.DefaultRequestHeaders.Accept.Clear();
+            //cons.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            //var tag = new AuthenticationRequest { UserName = username, Password = password, AuthenticationType = "form" };
 
-                string req = JsonConvert.SerializeObject(tag);
-                HttpContent content = new StringContent(tag.ToString(), Encoding.UTF8, "application/json");
-                HttpResponseMessage res = cons.PostAsync("http://localhost:57144/api/Authentication/UserLogin", new StringContent(@"{""RequestJSON"":" + req + "}", Encoding.Default, "application/json")).Result;
-                var data = await res.Content.ReadAsAsync<ServiceResponse>();
-                var token = data.ResponseJSON.AuthorizationToken;
-                string t = token.ToString();
-                return t;
-           
+            //string req = JsonConvert.SerializeObject(tag);
+            //HttpContent content = new StringContent(tag.ToString(), Encoding.UTF8, "application/json");
+            //HttpResponseMessage res = cons.PostAsync(url+"api/Authentication/UserLogin", new StringContent(@"{""RequestJSON"":" + req + "}", Encoding.Default, "application/json")).Result;
+
+
+            //var data = new ServiceResponse();
+            //try
+            //{
+            //    data = await res.Content.ReadAsAsync<ServiceResponse>();
+            //}
+            //catch (Exception ex)
+            //{
+
+            //}
+            //var token = data.ResponseJSON.AuthorizationToken;
+            //string t = token.ToString();
+            return "ok";
+
         }
     }
     public class AuthenticationResponse
@@ -49,5 +60,5 @@ namespace Zest_Client
         public string Password { get; set; }
         public string AuthenticationType { get; set; }
     }
-   
+
 }

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -14,15 +15,16 @@ namespace Zest_Client
         {
 
 
+            string url = ConfigurationManager.AppSettings["url"];
             HttpClient cons = new HttpClient();
-            cons.BaseAddress = new Uri("http://localhost:57144/");
+            cons.BaseAddress = new Uri(url);
             cons.DefaultRequestHeaders.Accept.Clear();
             cons.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
             cons.DefaultRequestHeaders.Add("Authorization", token);
             var id = new TestRequest { id = 2 };
             string proreq = JsonConvert.SerializeObject(id);
             HttpContent procontent = new StringContent(id.ToString(), Encoding.UTF8, "application/json");
-            HttpResponseMessage prores = cons.PostAsync("http://localhost:57144/api/Products/GetProduct", new StringContent(@"{""RequestJSON"":" + proreq + "}", Encoding.Default, "application/json")).Result;
+            HttpResponseMessage prores = cons.PostAsync(url +"api/Products/GetProduct", new StringContent(@"{""RequestJSON"":" + proreq + "}", Encoding.Default, "application/json")).Result;
             var prodata = await prores.Content.ReadAsAsync<Product>();
             var proname = prodata.ResponseJSON.Name;
             string name = proname.ToString();

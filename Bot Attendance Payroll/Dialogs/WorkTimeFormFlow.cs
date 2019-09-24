@@ -20,12 +20,7 @@ namespace Bot_Attendance_Payroll.Dialogs
 
             return new FormBuilder<WorkTimeFormFlow>()
                 .Message("Want to check your working hrs????")
-                .AddRemainingFields()
-                    // .OnCompletion(async (context, profileForm) =>
-                    // {
-                    //     // Tell the user that the form is complete  
-                    //     await context.PostAsync("Thanks.");
-                    // })
+                  .Field(nameof(worktimeTypes))
                     .Build();
         }
 
@@ -33,9 +28,10 @@ namespace Bot_Attendance_Payroll.Dialogs
         [Serializable]
         public enum WorkTimeTypes
         {
-            GrossHrs =1,
-            NetHrs =2,
-            AvgHrs=3
+            Total_Gross_Hrs =1,
+            Totat_Net_Hrs = 2,
+            Detail_Working_Hrs=3,
+            In_Out_Time = 4
             
         }
 

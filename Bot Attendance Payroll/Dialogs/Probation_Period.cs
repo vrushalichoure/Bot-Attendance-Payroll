@@ -11,14 +11,14 @@ using Zest_Client.repository;
 namespace Bot_Attendance_Payroll.Dialogs
 {
     [Serializable]
-    public class Probation_Period : IDialog<object>
+    public class Probation_Period
     {
          protected int employee_id { get; set; }
 
         public async Task StartAsync(IDialogContext context)
         {
             await context.PostAsync("Do you want know your probation duration?<br>"+"*Please enter employee id*");
-            context.Wait(this.abc);
+            
         }
 
         private async Task abc(IDialogContext context, IAwaitable<object> result)

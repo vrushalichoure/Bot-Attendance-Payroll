@@ -12,15 +12,8 @@ namespace Bot_Attendance_Payroll.Dialogs
     {
         public async Task StartAsync(IDialogContext context)
         {
-            await context.PostAsync("enter anything");
-            context.Wait(this.abc);
-        }
-
-        private async Task abc(IDialogContext context, IAwaitable<object> result)
-        {
-            var message = await result;
-            await context.PostAsync("Tds_deduction ");
-            context.Done(message);
+            await context.PostAsync("35124 rs");
+            context.Done(true);
         }
     }
 }

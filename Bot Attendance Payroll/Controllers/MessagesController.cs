@@ -38,7 +38,7 @@ namespace Bot_Attendance_Payroll
        
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
 
-        {
+            {
             if (activity.Type == ActivityTypes.Message)
             {
                
@@ -77,14 +77,13 @@ namespace Bot_Attendance_Payroll
                         {
                             var reply = message.CreateReply();
                             var msg = message.CreateReply();
-                            reply.Text = $"Welcome {newMember.Name}!<br>"+"Please type **HELLO** to begin chat";
+                            //Attachment attachment1 = new Attachment();
+                          //  attachment1.ContentType = "image/gif";
+                            //attachment1.ContentUrl = "https://cdn.dribbble.com/users/27231/screenshots/2432051/welcome.gif";
+                            //msg.Attachments.Add(attachment1);
+                           // client.Conversations.ReplyToActivityAsync(msg);
+                            reply.Text = "Please type **HELLO** to begin chat";
                             client.Conversations.ReplyToActivityAsync(reply);
-                            Attachment attachment1 = new Attachment();
-                            attachment1.ContentType = "image/png";
-                            attachment1.ContentUrl = "C:/Users/Vrushali/source/repos/Bot Attendance Payroll/Bot Attendance Payroll/Images/welcome.png";
-                            msg.Attachments.Add(attachment1);
-                            client.Conversations.ReplyToActivityAsync(msg);
-
                         }
 
                     }
@@ -94,6 +93,20 @@ namespace Bot_Attendance_Payroll
             {
                 // Handle add/remove from contact lists
                 // Activity.From + Activity.Action represent what happened
+                IConversationUpdateActivity update = message;
+                var client = new ConnectorClient(new Uri(message.ServiceUrl), new MicrosoftAppCredentials());  
+                if (message.Action == "add")
+                {
+                    var reply = message.CreateReply();
+                    var msg = message.CreateReply();
+                    Attachment attachment1 = new Attachment();
+                    attachment1.ContentType = "image/gif";
+                    attachment1.ContentUrl = "https://cdn.dribbble.com/users/27231/screenshots/2432051/welcome.gif";
+                    msg.Attachments.Add(attachment1);
+                    client.Conversations.ReplyToActivityAsync(msg);
+                    reply.Text = "Please type **HELLO** to begin chat";
+                    client.Conversations.ReplyToActivityAsync(reply);
+                }
             }
             else if (message.Type == ActivityTypes.Typing)
             {

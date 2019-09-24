@@ -10,15 +10,8 @@ namespace Bot_Attendance_Payroll.Dialogs
     {
         public async Task StartAsync(IDialogContext context)
         {
-           await context.PostAsync("enter anything");
-            context.Wait(this.abc);
-        }
-
-        private async Task abc(IDialogContext context, IAwaitable<object> result)
-        {
-            var message = await result;
-            await context.PostAsync("pf123");
-            context.Done(message);
+            await context.PostAsync("pf45sd ");
+            context.Done(true);
         }
     }
 }

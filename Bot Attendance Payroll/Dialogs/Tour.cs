@@ -13,27 +13,114 @@ namespace Bot_Attendance_Payroll.Dialogs
     [Serializable]
     public class Tour:IDialog<object>
     {
-        public Task StartAsync(IDialogContext context)
+
+        protected DateTime start_date { get; set; }
+
+        protected DateTime end_date { get; set; }
+
+        protected DateTime todays_date { get; set; }
+
+        protected string ans { get; set; }
+
+        public String reply { get; set; }
+
+        public const string AngryMood = "🙄";
+
+        public async Task StartAsync(IDialogContext context)
         {
-            context.PostAsync("Yes you can apply for tour<br>"+ "*May I help Help in Booking*");
-            context.Wait(MessageReceivedAsync);
-            return Task.CompletedTask;
+            var Type = FormDialog.FromForm(YesNoSelection.YesNoForm, FormOptions.PromptInStart);
+            context.Call(Type, User_Response);
         }
 
-        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+        public async Task User_Response(IDialogContext context, IAwaitable<YesNoSelection> result)
         {
-            var activity = await result as Activity;
-            var selectedCard = await result;
+            var selection = await result;
+            if (selection.option.ToString().Equals("Yes"))
+            {
+                await context.PostAsync("Please tell me from which date shall I apply???");
+                await context.PostAsync(" I understand this format ::**yyyy-mm-dd**");
+                context.Wait(Get_End_Date);
+            }
+            else if(selection.option.ToString().Equals("No"))
+            {
+                context.PostAsync("ok");
+                context.Done(true);
+            }
+        }
 
-            var message = context.MakeMessage();
+        public async Task Response_After_Passed_Start_Date(IDialogContext context, IAwaitable<object> result)
+        {
+                await context.PostAsync("Please tell me from which date shall I apply???");
+                await context.PostAsync(" I understand this format ::**yyyy-mm-dd**");
+                context.Wait(Get_End_Date);
+                
+        }
 
-            var attachment = GetSelectedCard(selectedCard);
-            message.Attachments.Add(attachment);
+        public async Task Get_End_Date(IDialogContext context, IAwaitable<object> result)
+        {
+            var get_start_date = await result as Activity;
+            start_date = DateTime.Parse(get_start_date.Text);
+            var todays_date = DateTime.Today;
 
-            await context.PostAsync(message);
+            if (start_date > todays_date)
+            {
+                await context.PostAsync("Please tell me till which date shall I apply???");
+                await context.PostAsync(" I understand this format ::**yyyy-mm-dd**");
+                context.Wait(Apply_Outdoor_Duty);
+            }
 
-            context.Wait(this.MessageReceivedAsync);
-            context.Done<object>(null);
+            else
+            {
+                context.PostAsync("Date has already passed");
+                context.PostAsync("Re-Enter Your Details");
+                context.Wait(Response_After_Passed_Start_Date);
+            }
+        }
+
+        public async Task Apply_Outdoor_Duty(IDialogContext context, IAwaitable<object> result)
+        {
+            var get_end_date = await result as Activity;
+            end_date = DateTime.Parse(get_end_date.Text);
+            var todays_date = DateTime.Today;
+
+            if (end_date > todays_date)
+            {
+                await context.PostAsync($"request for tour from {start_date.ToShortDateString()} till {end_date.ToShortDateString()} forwarded to project manager");
+                context.PostAsync("*Would you like check ticket availability??*");
+                var Type = FormDialog.FromForm(YesNoSelection.YesNoForm, FormOptions.PromptInStart);
+                context.Call(Type, MessageReceivedAsync);
+            }
+            else
+            {
+                context.PostAsync("Date has already passed");
+                context.PostAsync("Re-Enter your details");
+                context.Wait(Response_After_Passed_Start_Date);
+            }
+
+        }
+
+    
+
+
+
+        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<YesNoSelection> result)
+        {
+
+            var selection = await result;
+            if (selection.option.ToString().Equals("Yes"))
+            {
+                var selectedCard = await result;
+                var message = context.MakeMessage();
+                var attachment = GetSelectedCard(selectedCard);
+                message.Attachments.Add(attachment);
+                await context.PostAsync(message);
+                context.Done(true);
+            }
+            else if(selection.option.ToString().Equals("No"))
+            {
+                context.PostAsync("I could have helped you better" + AngryMood);
+                context.Done(true);
+            }
         }
    
 
@@ -46,7 +133,7 @@ namespace Bot_Attendance_Payroll.Dialogs
                 Text = "You can check flight and train booking from here only ....!!",
                 Images = new List<CardImage>
                 {
-                    new CardImage("C:/Users/Vrushali/source/repos/Bot Attendance Payroll/Bot Attendance Payroll/Images/ticket.jpg")
+                    new CardImage("https://cdn0.iconfinder.com/data/icons/transportation-13/512/ticket_booking-256.png")
                 },
                 Buttons = new List<CardAction> {
                     new CardAction(ActionTypes.OpenUrl, "Book a Flight", value: "https://www.google.co.in/flights/#search"),
@@ -56,8 +143,6 @@ namespace Bot_Attendance_Payroll.Dialogs
             };
 
             return heroCard.ToAttachment();
-
-
         }
         
 

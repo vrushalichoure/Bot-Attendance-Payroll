@@ -1,67 +1,67 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.FormFlow;
 using Microsoft.Bot.Connector;
+using Newtonsoft.Json.Linq;
+using Zest_Client.repository;
 
 namespace Bot_Attendance_Payroll.Dialogs
 {
     [Serializable]
-    public class Holidays : IDialog<object>
+
+    public class Holidays : LuisDialog<object>
     {
-        public async Task StartAsync(IDialogContext context)
+        protected int employee_id { get; set; }
+        public string details { get; set; }
+
+        public async Task DisplayAllHoliday(IDialogContext context, IAwaitable<object> result)
         {
-            var Type = FormDialog.FromForm(HolidayFormFlow.HolidayForm, FormOptions.PromptInStart);
-            context.Call(Type, HolidaySelection);
-        }
-
-        private async  Task HolidaySelection(IDialogContext context, IAwaitable<HolidayFormFlow> result)
-        {
-            var token = await result;
-            if (token.holidayType.ToString().Equals("Optional"))
+            var token = "ok";
+            var empID = context.UserData.GetValue<string>("empID");
+            var activity = await result as Activity;
+            try
             {
-                await context.PostAsync("Optional Holiday List");
-                context.Done(true);
-            }
-            else if (token.holidayType.ToString().Equals("Mandatory"))
-            {
-                await context.PostAsync("Mandatory Holiday List");
-                context.Done(true);
-            }
-            else if (token.holidayType.ToString().Equals("All"))
-            {
-                await context.PostAsync("All Holiday List");
-                context.Done(true);
-            }
-
-        }
-
-        
-            private async Task DisplayHoliday(IDialogContext context, IAwaitable<object> result)
-        {
-            await context.PostAsync("All holidays");
-
-            using (HttpClient client = new HttpClient())
-            {
-                
-                //Assuming that the api takes the user message as a query paramater
-                string RequestURI = "http://localhost:62943/api/Holiday";
-                HttpResponseMessage responsemMsg = await client.GetAsync(RequestURI);
-                if (responsemMsg.IsSuccessStatusCode)
+                var all_holiday_details = new AllHolidaysClient();
+                var holiday_response = await all_holiday_details.AllHolidaysDetails(token, Convert.ToInt32(empID));
+                if (holiday_response != null && holiday_response.ResponseJSON != null)
                 {
-                    var apiResponse = await responsemMsg.Content.ReadAsStringAsync();
+                    List<HolidayList> data = holiday_response.ResponseJSON;
+                    List<string> values = new List<string>();
 
-                    //Post the API response to bot again
-                    await context.PostAsync($"Response is {apiResponse}");
-
+                    foreach (var dataresp in data)
+                    {
+                        values.Add("**Holiday Name**" + ":::" + dataresp.HolidayName);
+                        values.Add("**Holiday Date**" + ":::" + dataresp.ObservingDate.ToLongDateString());
+                        values.Add("------------------------------------------");
+                        values.Add("------------------------------------------");
+                    }
+                    string all_holiday_list_value = string.Join("<br/>\r\n", values);
+                    await context.PostAsync(all_holiday_list_value);
+                   
                 }
-
-                context.Done<object>(null);
-
-
-                //context.Wait(MessageReceivedAsync);
+                 context.Done(true);
             }
+            catch (Exception ex)
+            {
+                string filePath = AppDomain.CurrentDomain.BaseDirectory;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("InnerException : " + ex.InnerException);
+                sb.Append("All_Holidays");
+                sb.Append(Environment.NewLine);
+                sb.Append("Message : " + ex.Message);
+                sb.Append(Environment.NewLine);
+                System.IO.File.AppendAllText(System.IO.Path.Combine(filePath, "Exception_log.txt"), sb.ToString());
+                sb.Clear();
+                await context.PostAsync("Data not found");
+                context.Done(true);
+            }
+
         }
+
+       
     }
 }

@@ -13,9 +13,7 @@ namespace Bot_Attendance_Payroll.Dialogs
     {   //public String s = "session";
         public async Task StartAsync(IDialogContext context)
         {
-           // await context.PostAsync("tour det");
             context.Done(true);
-            //context.Wait(MessageReceived);
         }
 
        
